@@ -72,6 +72,16 @@ export function MainScreen() {
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Sub-location filter for active location
+  const [activeSubLocation, setActiveSubLocation] = useState<string>('All');
+  const [subLocationSearch, setSubLocationSearch] = useState<string>('');
+  const [showSubLocationSearch, setShowSubLocationSearch] = useState<boolean>(false);
+
+  const currentSubLocations = useMemo(
+    () => store.getSubLocations(store.activeLocation),
+    [store, store.activeLocation]
+  );
+
   const canViewHistory =
     !!currentUser &&
     (currentUser.role === 'admin' ||
@@ -121,10 +131,20 @@ export function MainScreen() {
         String(item.location || '').toLowerCase().includes(query) ||
         String(item.barcode_id || '').toLowerCase().includes(query);
 
-      if (searchQuery.trim() === '') return item.location === store.activeLocation;
+      if (searchQuery.trim() === '') {
+        const matchesLoc = item.location === store.activeLocation;
+        if (!matchesLoc) return false;
+        if (activeSubLocation !== 'All') {
+          return (item.sub_location || '') === activeSubLocation;
+        }
+        return true;
+      }
+      if (activeSubLocation !== 'All') {
+        return matchesSearch && (item.sub_location || '') === activeSubLocation;
+      }
       return matchesSearch;
     });
-  }, [store.items, searchQuery, store.activeLocation, advApplied, showAdvancedSearch, advFilters]);
+  }, [store.items, searchQuery, store.activeLocation, activeSubLocation, advApplied, showAdvancedSearch, advFilters]);
 
   const openGlobalHistory = () => {
     if (!canViewHistory) {
@@ -364,6 +384,9 @@ export function MainScreen() {
                   onClick={() => {
                     setSearchQuery('');
                     setAdvApplied(false);
+                    setActiveSubLocation('All');
+                    setSubLocationSearch('');
+                    setShowSubLocationSearch(false);
                     store.setActiveLocation(loc.name);
                   }}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-bold border transition-all shrink-0 cursor-pointer ${
@@ -393,6 +416,96 @@ export function MainScreen() {
               <span>Manage</span>
             </button>
           </div>
+
+          {/* Sub-location Bar (shows only sub-locations for the active location) */}
+          {currentSubLocations.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 text-xs">
+              <span className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                <MapPin size={11} />
+                <span>Sub-loc:</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setActiveSubLocation('All')}
+                className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer ${
+                  activeSubLocation === 'All'
+                    ? 'bg-[#111827] text-white shadow-xs'
+                    : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-gray-200'
+                }`}
+              >
+                All ({store.items.filter((i) => i.location === store.activeLocation).length})
+              </button>
+
+              {currentSubLocations
+                .filter(
+                  (sub) =>
+                    !subLocationSearch ||
+                    sub.toLowerCase().includes(subLocationSearch.toLowerCase())
+                )
+                .map((sub) => {
+                  const active = activeSubLocation === sub;
+                  const count = store.items.filter(
+                    (i) => i.location === store.activeLocation && i.sub_location === sub
+                  ).length;
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => setActiveSubLocation(active ? 'All' : sub)}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-[#4F46E5] text-white shadow-xs'
+                          : 'bg-white border border-[#E5E7EB] text-[#6B7280] hover:border-gray-300'
+                      }`}
+                    >
+                      <span>{sub}</span>
+                      <span className={`text-[10px] ${active ? 'text-white/80' : 'text-[#9CA3AF]'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+
+              <button
+                type="button"
+                onClick={() => setShowSubLocationSearch(!showSubLocationSearch)}
+                title="Search sub-locations"
+                className={`p-1.5 rounded-lg shrink-0 transition-colors cursor-pointer ${
+                  showSubLocationSearch || subLocationSearch
+                    ? 'text-[#4F46E5] bg-indigo-50 border border-indigo-200'
+                    : 'text-[#9CA3AF] hover:text-[#111827] bg-[#F3F4F6]'
+                }`}
+              >
+                <Search size={13} />
+              </button>
+            </div>
+          )}
+
+          {showSubLocationSearch && (
+            <div className="pb-2.5">
+              <div className="flex items-center bg-[#F3F4F6] rounded-xl px-3 py-1.5 text-xs">
+                <Search size={13} color="#9CA3AF" className="mr-1.5 shrink-0" />
+                <input
+                  type="text"
+                  value={subLocationSearch}
+                  onChange={(e) => setSubLocationSearch(e.target.value)}
+                  placeholder={`Search sub-locations in ${store.activeLocation}...`}
+                  className="w-full bg-transparent text-[#111827] placeholder-[#9CA3AF] focus:outline-none"
+                  autoFocus
+                />
+                {subLocationSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setSubLocationSearch('')}
+                    className="p-0.5 hover:opacity-70 cursor-pointer"
+                  >
+                    <X size={13} color="#9CA3AF" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

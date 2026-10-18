@@ -5,6 +5,7 @@ import { Batch, useStore } from '../store';
 import { useToast } from '../toast';
 import { STATUSES } from '../theme';
 import { Field, Input, ModalShell, PrimaryButton, SafeImage, Select } from '../components/ui';
+import { SubLocationField } from '../components/SubLocationField';
 import { BarcodeScannerModal } from '../components/BarcodeScanner';
 import { formatDate } from '../format';
 
@@ -385,9 +386,10 @@ export function ReceiveModal({
             />
           </Field>
           <Field label="Sub-location">
-            <Input
+            <SubLocationField
               value={subLocation}
-              onChangeText={setSubLocation}
+              onChange={setSubLocation}
+              location={location}
               placeholder="e.g. Closet 2"
             />
           </Field>

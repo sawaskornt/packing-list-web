@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Check, ChevronDown, Image as ImageIcon, Loader2, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Check, ChevronDown, Image as ImageIcon, Loader2, Search, X } from 'lucide-react';
 import { resolveImageUrl } from '../api';
 
 // ---------- SafeImage ----------
@@ -153,13 +153,30 @@ export function Select({
   options,
   onChange,
   placeholder,
+  searchable,
+  title,
 }: {
   value: string;
   options: string[];
   onChange: (v: string) => void;
   placeholder?: string;
+  searchable?: boolean;
+  title?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const isSearchable = searchable ?? options.length > 5;
+
+  const filteredOptions = useMemo(() => {
+    if (!search.trim()) return options;
+    const q = search.toLowerCase();
+    return options.filter((opt) => opt.toLowerCase().includes(q));
+  }, [options, search]);
+
+  useEffect(() => {
+    if (open) setSearch('');
+  }, [open]);
 
   return (
     <>
@@ -180,32 +197,65 @@ export function Select({
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-3 max-h-[70vh] overflow-y-auto shadow-xl"
+            className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-3 max-h-[75vh] flex flex-col shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {options.length === 0 ? (
-              <div className="py-6 text-center text-sm text-[#9CA3AF]">No options available</div>
-            ) : (
-              options.map((opt) => {
-                const isSelected = opt === value;
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => {
-                      onChange(opt);
-                      setOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3.5 py-3.5 rounded-xl text-left text-[15px] transition-colors cursor-pointer ${
-                      isSelected ? 'bg-[#EEF2FF] text-[#4F46E5] font-bold' : 'text-[#111827] hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className="truncate pr-2">{opt}</span>
-                    {isSelected && <Check size={18} color="#4F46E5" strokeWidth={2.5} className="shrink-0" />}
-                  </button>
-                );
-              })
+            {isSearchable && (
+              <div className="px-1 pb-2 border-b border-[#F3F4F6] mb-1">
+                <div className="flex items-center bg-[#F3F4F6] rounded-xl px-3 py-2">
+                  <Search size={15} color="#9CA3AF" className="mr-2 shrink-0" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={`Search ${title || 'options'}...`}
+                    className="w-full bg-transparent text-[14px] text-[#111827] placeholder-[#9CA3AF] focus:outline-none"
+                    autoFocus
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="p-0.5 hover:opacity-70 cursor-pointer"
+                    >
+                      <X size={14} color="#9CA3AF" />
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
+
+            <div className="overflow-y-auto flex-1">
+              {filteredOptions.length === 0 ? (
+                <div className="py-6 text-center text-sm text-[#9CA3AF]">
+                  {search ? `No options matching "${search}"` : 'No options available'}
+                </div>
+              ) : (
+                filteredOptions.map((opt) => {
+                  const isSelected = opt === value;
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => {
+                        onChange(opt);
+                        setOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left text-[15px] transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#EEF2FF] text-[#4F46E5] font-bold'
+                          : 'text-[#111827] hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="truncate pr-2">{opt}</span>
+                      {isSelected && (
+                        <Check size={18} color="#4F46E5" strokeWidth={2.5} className="shrink-0" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       )}

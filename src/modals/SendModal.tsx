@@ -5,6 +5,7 @@ import { useStore } from '../store';
 import { useToast } from '../toast';
 import { STATUSES } from '../theme';
 import { Field, Input, ModalShell, PrimaryButton, Select } from '../components/ui';
+import { SubLocationField } from '../components/SubLocationField';
 
 interface BatchLine {
   item: InventoryItem;
@@ -182,9 +183,10 @@ export function SendModal({
       </Field>
 
       <Field label="Destination Sub-location (Optional)">
-        <Input
+        <SubLocationField
           value={destSubLocation}
-          onChangeText={setDestSubLocation}
+          onChange={setDestSubLocation}
+          location={destLocation}
           placeholder="e.g. Rack A, Shelf 3"
         />
       </Field>

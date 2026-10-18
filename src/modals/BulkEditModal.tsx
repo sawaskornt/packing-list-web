@@ -68,7 +68,11 @@ export function BulkEditModal({
             <Select value={subLocMode} options={[KEEP, 'Clear', 'Set new']} onChange={setSubLocMode} />
             {subLocMode === 'Set new' && (
               <div className="mt-2.5">
-                <SubLocationField value={newSubLoc} onChange={setNewSubLoc} />
+                <SubLocationField
+                  value={newSubLoc}
+                  onChange={setNewSubLoc}
+                  location={targetLocation || store.activeLocation}
+                />
               </div>
             )}
           </Field>

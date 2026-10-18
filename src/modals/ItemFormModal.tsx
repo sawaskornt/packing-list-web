@@ -223,7 +223,11 @@ export function ItemFormModal({
       )}
 
       <Field label="Sub-location / Storage (Optional)">
-        <SubLocationField value={subLocation} onChange={setSubLocation} />
+        <SubLocationField
+          value={subLocation}
+          onChange={setSubLocation}
+          location={isEdit ? location : store.activeLocation}
+        />
       </Field>
 
       <Field label="Quantity">

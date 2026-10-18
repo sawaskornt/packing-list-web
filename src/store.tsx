@@ -38,6 +38,7 @@ interface StoreValue {
   setActiveLocation: (loc: Location) => void;
   allowedLocations: LocationRecord[];
   existingSubLocations: string[];
+  getSubLocations: (location?: string) => string[];
 
   // Actions
   reloadAll: () => Promise<void>;
@@ -111,8 +112,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const existingSubLocations = useMemo(() => {
     const subs = items.map((item) => item.sub_location).filter(Boolean) as string[];
-    return Array.from(new Set(subs)).sort();
+    return Array.from(new Set(subs)).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   }, [items]);
+
+  const getSubLocations = useCallback(
+    (loc?: string) => {
+      if (!loc || loc === 'All') {
+        return existingSubLocations;
+      }
+      const locLower = loc.trim().toLowerCase();
+      const subs = items
+        .filter((item) => (item.location || '').trim().toLowerCase() === locLower)
+        .map((item) => item.sub_location)
+        .filter(Boolean) as string[];
+      return Array.from(new Set(subs)).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    },
+    [items, existingSubLocations]
+  );
+
 
   const fetchItems = useCallback(async () => {
     try {
@@ -702,6 +719,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setActiveLocation,
     allowedLocations,
     existingSubLocations,
+    getSubLocations,
     reloadAll,
     fetchItems,
     fetchTimeline,

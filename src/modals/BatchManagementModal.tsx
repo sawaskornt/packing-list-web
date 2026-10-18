@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Batch, useStore } from '../store';
 import { STATUSES } from '../theme';
 import { ConfirmDialog, Field, Input, ModalShell, PrimaryButton, SecondaryButton, Select } from '../components/ui';
+import { SubLocationField } from '../components/SubLocationField';
 import { formatDate } from '../format';
 
 export function BatchManagementModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
@@ -143,10 +144,11 @@ export function BatchManagementModal({ visible, onClose }: { visible: boolean; o
                   <div className="text-[9px] font-extrabold text-[#9CA3AF] uppercase tracking-[0.6px] mb-1">
                     Sub-Loc
                   </div>
-                  <Input
+                  <SubLocationField
                     value={it.dest_sub_location || ''}
-                    onChangeText={(v) => updateItemField(idx, 'dest_sub_location', v)}
-                    className="!py-2"
+                    onChange={(v) => updateItemField(idx, 'dest_sub_location', v)}
+                    location={dest}
+                    placeholder="Sub-loc..."
                   />
                 </div>
               </div>

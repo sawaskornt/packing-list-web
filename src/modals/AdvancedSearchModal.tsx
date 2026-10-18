@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ModalShell, Field, Input, PrimaryButton, SecondaryButton, Select } from '../components/ui';
 import { useStore } from '../store';
 import { STATUSES } from '../theme';
@@ -40,7 +40,11 @@ export function AdvancedSearchModal({
   onClear: () => void;
   onClose: () => void;
 }) {
-  const { locations, categories, existingSubLocations } = useStore();
+  const { locations, categories, getSubLocations } = useStore();
+
+  const subLocationOptions = useMemo(() => {
+    return ['All', ...getSubLocations(filters.location)];
+  }, [getSubLocations, filters.location]);
 
   return (
     <ModalShell visible={visible} title="Advanced Search" onClose={onClose}>
@@ -54,20 +58,34 @@ export function AdvancedSearchModal({
         <Select
           value={filters.location}
           options={['All', ...locations.map((l) => l.name)]}
-          onChange={(v) => setFilters({ ...filters, location: v })}
+          searchable
+          title="locations"
+          onChange={(newLoc) => {
+            const newSubs = getSubLocations(newLoc);
+            const stillValid = filters.sub_location === 'All' || newSubs.includes(filters.sub_location);
+            setFilters({
+              ...filters,
+              location: newLoc,
+              sub_location: stillValid ? filters.sub_location : 'All',
+            });
+          }}
         />
       </Field>
       <Field label="Item Type">
         <Select
           value={filters.category}
           options={['All', ...categories.map((c) => c.name)]}
+          searchable
+          title="categories"
           onChange={(v) => setFilters({ ...filters, category: v })}
         />
       </Field>
-      <Field label="Sub-location">
+      <Field label={`Sub-location ${filters.location && filters.location !== 'All' ? `(${filters.location})` : ''}`}>
         <Select
           value={filters.sub_location}
-          options={['All', ...existingSubLocations]}
+          options={subLocationOptions}
+          searchable
+          title="sub-locations"
           onChange={(v) => setFilters({ ...filters, sub_location: v })}
         />
       </Field>

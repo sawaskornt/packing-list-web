@@ -47,7 +47,7 @@ export function MoveConfirmModal({
             to <span className="font-extrabold text-[#4F46E5]">{pendingMove.location}</span>?
           </p>
           <Field label="Sub-location / Storage (Optional)">
-            <SubLocationField value={subLoc} onChange={setSubLoc} />
+            <SubLocationField value={subLoc} onChange={setSubLoc} location={pendingMove.location} />
           </Field>
         </>
       )}
